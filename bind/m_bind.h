@@ -23,13 +23,13 @@ using remove_reference_t = typename std::remove_reference<T>::type;
 template<typename T>
 using remove_pointer_t = typename std::remove_pointer<T>::type;
 
-template<size_t ...elements>
+template<size_t ...>
 struct seq{};
 template<size_t max, size_t... elements>
 struct make_seq : make_seq<max-1, max-1, elements...> {};
 template<size_t... elements>
 struct make_seq<0U, elements...> {
-    typedef seq<elements...> type;
+    __unused typedef seq<elements...> type;
 };
 template<size_t max>
 using Make_Seq = typename make_seq<max>::type;
@@ -42,18 +42,18 @@ private:
     std::tuple<Args&& ...> bounded_args;
 public:
     template<typename ...BArgs>
-    args_list(BArgs&& ...args) noexcept
+    explicit args_list(BArgs&& ...args) noexcept
             : bounded_args(std::forward<BArgs>(args)...) { }
 
     // not placeholder
     template<typename T,
-            enable_if_t<(std::is_placeholder<remove_reference_t<T>>::value == 0)>* = nullptr>
+            typename = enable_if_t<(std::is_placeholder<remove_reference_t<T>>::value == 0)>>
     auto operator[](T&& t) noexcept -> T&& {
         return std::forward<T>(t);
     }
     // placeholder, _1, _2, _3, ...
     template<typename T,
-            enable_if_t<std::is_placeholder<T>::value != 0>* = nullptr>
+            typename = enable_if_t<std::is_placeholder<T>::value != 0>>
     auto operator[](T) noexcept
     -> typename std::tuple_element<std::is_placeholder<T>::value - 1, std::tuple<Args...>>::type {
         return std::get<std::is_placeholder<T>::value - 1>(std::move(bounded_args));
@@ -68,7 +68,7 @@ private:
     using res_t = typename std::function<remove_reference_t<remove_pointer_t<F>>>::result_type;
 public:
     template<typename BF, typename ...BArgs>
-    binder(BF&& f, BArgs&& ...args) noexcept
+    explicit binder(BF&& f, BArgs&& ...args) noexcept
             : func{std::forward<BF>(f)},
               bounded_args{std::forward<BArgs>(args)...} { }
 
