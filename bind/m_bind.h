@@ -48,7 +48,7 @@ public:
     // not placeholder
     template<typename T,
             enable_if_t<(std::is_placeholder<remove_reference_t<T>>::value == 0)>* = nullptr>
-    auto operator[](T&& t) noexcept -> decltype(std::forward<T>(t)) {
+    auto operator[](T&& t) noexcept -> T&& {
         return std::forward<T>(t);
     }
     // placeholder, _1, _2, _3, ...
@@ -65,23 +65,24 @@ class binder {
 private:
     std::function<remove_reference_t<remove_pointer_t<F>>> func;
     std::tuple<BoundedArgs...> bounded_args;
+    using res_t = typename std::function<remove_reference_t<remove_pointer_t<F>>>::result_type;
 public:
     template<typename BF, typename ...BArgs>
     binder(BF&& f, BArgs&& ...args) noexcept
-        : func{std::forward<BF>(f)},
-          bounded_args{std::forward<BArgs>(args)...} { }
+            : func{std::forward<BF>(f)},
+              bounded_args{std::forward<BArgs>(args)...} { }
 
     template<typename ...Args>
     auto operator()(Args&& ...args)
-    -> typename std::function<remove_reference_t<remove_pointer_t<F>>>::result_type {
+    -> res_t {
         return call(Make_Seq<sizeof...(BoundedArgs)>{}, std::forward<Args>(args)...);
     }
 private:
     template<typename ...Args, size_t ...S>
     auto call(seq<S...>, Args&& ...args)
-    -> typename std::function<remove_reference_t<remove_pointer_t<F>>>::result_type {
+    -> res_t {
         return func((args_list<Args...>{std::forward<Args>(args)...}
-                    [std::get<index_constant<S>{}>(bounded_args)])...);
+        [std::get<index_constant<S>{}>(bounded_args)])...);
     }
 };
 
