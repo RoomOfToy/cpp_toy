@@ -2,20 +2,20 @@
 // Created by Harold on 2020/8/7.
 //
 
-#include "dispatcher.h"
+#include "evloop.h"
 #include <iostream>
 
 struct event {
-    dispatcher<event>& dispatcher;
+    evloop<event>& evloop;
     static const int id = 0;
 };
 
 int main() {
-    dispatcher<event> dispatcher;
+    evloop<event> dispatcher;
     dispatcher.register_event(event::id, [](const event& evt) {
         std::cout << "repeated event run after 1000 milli-seconds\n";
         // repeat
-        evt.dispatcher.post(event::id, evt, 1000);
+        evt.evloop.post(event::id, evt, 1000);
     });
     dispatcher.start();
     auto start = std::chrono::high_resolution_clock::now();
@@ -37,7 +37,7 @@ int main() {
     dispatcher.register_event(event::id, [](const event& evt) {
         std::cout << "repeated event run after 2 seconds\n";
         // change duration base to seconds
-        evt.dispatcher.post<std::chrono::seconds>(event::id, evt, 2);
+        evt.evloop.post<std::chrono::seconds>(event::id, evt, 2);
     });
     dispatcher.start();
     start = std::chrono::high_resolution_clock::now();

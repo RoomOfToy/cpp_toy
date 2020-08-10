@@ -2,8 +2,8 @@
 // Created by Harold on 2020/8/7.
 //
 
-#ifndef CPP_TOY_DISPATCHER_H
-#define CPP_TOY_DISPATCHER_H
+#ifndef CPP_TOY_EVLOOP_H
+#define CPP_TOY_EVLOOP_H
 
 #include <memory>
 #include <thread>
@@ -25,7 +25,7 @@ struct is_chrono_duration<std::chrono::duration<Rep, Period>> {
 //###################### end of helper ########################
 
 template<typename EventType>
-class dispatcher {
+class evloop {
 public:
     using callback_t = std::function<void(const EventType &)>;
     using defer_t = std::function<void(std::unique_lock<std::mutex> &)>;
@@ -37,18 +37,18 @@ private:
     std::multimap<int, callback_t> callbacks_;
     std::multimap<std::chrono::time_point<std::chrono::high_resolution_clock>, defer_t> events_;
 public:
-    dispatcher() : running_(false) {};
+    evloop() : running_(false) {};
 
     // non-copyable
-    dispatcher(const dispatcher &) = delete;
-    dispatcher &operator=(const dispatcher &) = delete;
+    evloop(const evloop &) = delete;
+    evloop &operator=(const evloop &) = delete;
 
     // movable
-    dispatcher(dispatcher &&) noexcept = default;
+    evloop(evloop &&) noexcept = default;
 
     void start() {
         running_ = true;
-        thread_ = std::thread(&dispatcher<EventType>::loop, this);
+        thread_ = std::thread(&evloop<EventType>::loop, this);
     }
 
     void pause() {
@@ -89,7 +89,7 @@ public:
         {
             std::unique_lock<std::mutex> lock(events_lock_);
             events_.insert(std::make_pair(std::move(std::chrono::high_resolution_clock::now() + duration),
-                                          std::bind(&dispatcher::defer,
+                                          std::bind(&evloop::defer,
                                                     this, event_id, std::move(evt), std::placeholders::_1)));
         }
         // wake up when new event coming
@@ -136,4 +136,4 @@ private:
     }
 };
 
-#endif //CPP_TOY_DISPATCHER_H
+#endif //CPP_TOY_EVLOOP_H
