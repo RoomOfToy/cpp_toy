@@ -4,4 +4,4 @@ project(cpp_toy)
 set(CMAKE_CXX_STANDARD 11)
 
 add_executable(cpp_toy
-        bind/m_bind.cpp)
+        meta/meta_func_class.cpp)
