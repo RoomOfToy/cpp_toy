@@ -4,4 +4,4 @@ project(cpp_toy)
 set(CMAKE_CXX_STANDARD 11)
 
 add_executable(cpp_toy
-        range/range.cpp)
+        channel/channel.cpp)
